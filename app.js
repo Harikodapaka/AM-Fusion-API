@@ -8,10 +8,8 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var mongo = require('mongodb');
 var mongoose = require('mongoose');
-
-mongoose.connect('mongodb://localhost/admin');
-var db = mongoose.connection;
-
+var config = require('./config.json')
+var connection = require('./db/conection')
 var apiRoutes = require('./routes/api.routes');
 var auth = require('./routes/auth.routes');
 
@@ -39,8 +37,6 @@ app.use('/api', apiRoutes);
 app.use('/auth', auth);
 
 // Set Port
-app.set('port', (process.env.PORT || 3000));
-
-app.listen(app.get('port'), function(){
-	console.log('Server started on port '+app.get('port'));
+var server = app.listen(config.port, function () {
+    console.log('Server listening at http://localhost'+ ':' + server.address().port);
 });
