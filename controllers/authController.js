@@ -14,24 +14,26 @@ router.post("/register", function (req, res) {
             res.send({ success: false, message: 'User already exist!' })
             return;
         } else {
-            bcrypt.genSalt(10, function (err, salt) {
-                bcrypt.hash(req.body.password, salt, function (err, hash) {
-                    obj.password = hash;
-                    obj.token = jwt.sign({ sub: user._id }, config.secret)
-                    var model = new user(obj);
-                    model.save(function (err) {
-                        if (err) {
-                            res.send({ "error": err });
-                            return;
-                        }
-                        res.status(500).send({ success: true, user: obj });
-                    });
-                });
-            });
-
+            saveUserInDB(obj);
         }
     })
-
+    function saveUserInDB(usr){
+        bcrypt.genSalt(10, function (err, salt) {
+            bcrypt.hash(usr.password, salt, function (err, hash) {
+                usr.password = hash;
+                usr.token = jwt.sign({ sub: user._id }, config.secret)
+                var model = new user(usr);
+                model.save(function (err) {
+                    if (err) {
+                        res.send({ "error": err });
+                        return;
+                    }
+                    res.status(500).send({ success: true, user: usr });
+                });
+            });
+        });
+    }
+    
 }).post('/login', function (req, res) {
     console.log(">>>>>>>>>>>>>>>>>>", req);
 })

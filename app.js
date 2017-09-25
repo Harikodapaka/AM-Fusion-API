@@ -8,6 +8,9 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var mongo = require('mongodb');
 var mongoose = require('mongoose');
+var expressJwt = require('express-jwt');
+
+// App
 var config = require('./config.json')
 var connection = require('./db/conection')
 var apiRoutes = require('./routes/api.routes');
@@ -15,6 +18,19 @@ var auth = require('./routes/auth.routes');
 
 // Init App
 var app = express();
+
+app.use(expressJwt({
+    secret: config.secret,
+    getToken: function (req) {
+        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Token') {
+            return req.headers.authorization.split(' ')[1];
+        } else if (req.query && req.query.token) {
+            return req.query.token;
+        }
+        return null;
+    }
+}).unless({ path: ['/auth/register'] }));
+
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -36,6 +52,41 @@ app.use(passport.session());
 app.use('/api', apiRoutes);
 app.use('/auth', auth);
 
+
+// error handlers
+
+// [SH] Catch unauthorised errors
+app.use(function (err, req, res, next) {
+    if (err.name === 'UnauthorizedError') {
+        var resp = {success:false,statusCode:401};
+        resp[err.name]=err.message;
+      res.status(401);
+      res.json(resp);
+    }
+  });
+  
+  // development error handler
+  // will print stacktrace
+  if (app.get('env') === 'development') {
+      app.use(function(err, req, res, next) {
+          res.status(err.status || 500);
+          res.render('error', {
+              message: err.message,
+              error: err
+          });
+      });
+  }
+  
+  // production error handler
+  // no stacktraces leaked to user
+  app.use(function(err, req, res, next) {
+      res.status(err.status || 500);
+      res.render('error', {
+          message: err.message,
+          error: {}
+      });
+  });
+  
 // Set Port
 var server = app.listen(config.port, function () {
     console.log('Server listening at http://localhost'+ ':' + server.address().port);
