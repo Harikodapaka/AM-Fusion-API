@@ -2,11 +2,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var expressValidator = require('express-validator');
 var session = require('express-session');
-var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
-var mongo = require('mongodb');
 var mongoose = require('mongoose');
 var expressJwt = require('express-jwt');
 
@@ -24,12 +20,10 @@ app.use(expressJwt({
     getToken: function (req) {
         if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Token') {
             return req.headers.authorization.split(' ')[1];
-        } else if (req.query && req.query.token) {
-            return req.query.token;
         }
         return null;
     }
-}).unless({ path: ['/auth/register'] }));
+}).unless({ path: ['/auth/register','/auth/login'] }));
 
 
 // parse application/x-www-form-urlencoded
@@ -38,18 +32,8 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
 
-// Express Session
-app.use(session({
-    secret: 'secret',
-    saveUninitialized: true,
-    resave: true
-}));
-
-// Passport init
-app.use(passport.initialize());
-app.use(passport.session());
-
 app.use('/api', apiRoutes);
+
 app.use('/auth', auth);
 
 

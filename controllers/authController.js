@@ -1,40 +1,138 @@
 var express = require("express"),
     router = express.Router(),
-    user = require("../models/user-model"),
+    userSchema = require("../models/user-model"),
     config = require('../config.json'),
     bcrypt = require('bcryptjs'),
-    jwt = require('jsonwebtoken');
+    jwt = require('jsonwebtoken'),
+    argon2 = require('argon2');
 
 router.post("/register", function (req, res) {
     var obj = req.body;
-    var query = { username: obj.username };
-    user.findOne(query, function (err, data) {
-        if (data != null) {
-            // res.status(500).send({ error: err });
-            res.send({ success: false, message: 'User already exist!' })
-            return;
-        } else {
+    obj.username = obj.email;
+    var query = {
+        email: obj.email
+    };
+    findone(query).then(function (data) {
+       
+        if (data === null) {
             saveUserInDB(obj);
+        } else {
+            res.send({
+                success: false,
+                message: 'User already exist'
+            })
         }
+    }).catch((err) => {
+        res.send({
+            success: false,
+            message: 'Failed to query DB'
+        })
+        return;
     })
-    function saveUserInDB(usr){
-        bcrypt.genSalt(10, function (err, salt) {
-            bcrypt.hash(usr.password, salt, function (err, hash) {
-                usr.password = hash;
-                usr.token = jwt.sign({ sub: user._id }, config.secret)
-                var model = new user(usr);
-                model.save(function (err) {
-                    if (err) {
-                        res.send({ "error": err });
-                        return;
-                    }
-                    res.status(500).send({ success: true, user: usr });
+    function saveUserInDB(usr) {
+        var newUser = new userSchema(usr);
+        makeHash(usr.password).then(hash =>{
+            newUser.password = hash;
+            newUser.save(function (err, user) {
+            if (err) {
+                return res.status(400).send({
+                    success: false,
+                    message: err
                 });
-            });
+            } else {
+                return res.status(200).send({
+                    success: true
+                });
+            }
         });
+        }).catch(err =>{
+            return res.status(400).send({
+                    success: false,
+                    message: 'Internal server error',
+                    error:err
+                });
+        })        
     }
-    
+
 }).post('/login', function (req, res) {
-    console.log(">>>>>>>>>>>>>>>>>>", req);
+    let query = {
+        email: req.body.email
+    }
+    findone(query).then(function (respDB) {
+        var user = JSON.parse(JSON.stringify(respDB));
+        
+        if (user === null) {
+            res.status(401).json({
+                success: false,
+                message: 'Authentication failed. User not found'
+            });
+            return;
+        }
+         if (user) {
+                matchPassword(user.password, req.body.password).then(isMatched =>{
+                    if (isMatched) {
+                        user.token=jwt.sign({ email: user.email, _id: user._id}, 'RESTFULAPIs');
+                        delete user['password'];
+                        return res.status(200).json({
+                        status:true,
+                        user: user
+                    })
+                    }else{
+                        return res.status(401).json({
+                            status:false,
+                            message: "Invalid credentials"
+                        })
+                    }
+                }).catch((err) => {
+                res.send({
+                    success: false,
+                    error:err,
+                    message: 'Internal server error'
+                })
+                return;
+            })
+        }
+    }).catch((err) => {
+        res.send({
+            success: false,
+            error:err,
+            message: 'Failed to query DB'
+        })
+        return;
+    })
 })
+
+function findone(query) {
+    return new Promise(function (resolve, reject) {
+        userSchema.findOne(query, function (err, data) {
+            if (err) return reject(err)
+            resolve(data)
+        })
+    })
+}
+function matchPassword(hash,password) {
+    return new Promise(function (resolve, reject) {
+        argon2.verify(hash,password ).then(match => {
+          if (match) {
+            resolve(match);
+          } else {
+            resolve(match);
+          }
+        }).catch(err => {
+          reject(err)
+        });
+    })   
+}
+function makeHash(password) {
+    return new Promise(function (resolve, reject) {
+        argon2.hash(password, {
+          type: argon2.argon2d
+        }).then( hash =>{
+            resolve(hash);
+        }).catch(err =>{
+            return reject(err);
+        })
+    })
+        
+}
 module.exports = router;
