@@ -8,7 +8,7 @@ var express = require("express"),
 
 router.post("/register", function (req, res) {
     var obj = req.body;
-    obj.username = obj.email;
+    obj.username = (obj.email).split('@')[0];
     var query = {
         email: obj.email
     };
