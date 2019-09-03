@@ -2,7 +2,6 @@ var express = require("express"),
     router = express.Router(),
     userSchema = require("../models/user-model"),
     config = require('../config.json'),
-    bcrypt = require('bcryptjs'),
     jwt = require('jsonwebtoken'),
     argon2 = require('argon2');
 

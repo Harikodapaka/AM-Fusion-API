@@ -1,5 +1,4 @@
 var mongoose = require('mongoose'),
-	bcrypt = require('bcryptjs');
 	shortid = require('shortid');
 
 // User Schema
