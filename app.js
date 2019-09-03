@@ -72,6 +72,6 @@ app.use(function (err, req, res, next) {
   });
   
 // Set Port
-var server = app.listen(config.port, function () {
+var server = app.listen(process.env.PORT || config.port, function () {
     console.log('Server listening at http://localhost'+ ':' + server.address().port);
 });
