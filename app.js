@@ -5,6 +5,7 @@ var bodyParser = require('body-parser');
 var session = require('express-session');
 var mongoose = require('mongoose');
 var expressJwt = require('express-jwt');
+var cors = require('cors');
 
 // App
 var config = require('./config.json')
