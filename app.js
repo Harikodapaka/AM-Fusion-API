@@ -17,7 +17,7 @@ var auth = require('./routes/auth.routes');
 var app = express();
 
 var allowedOrigins = ['http://localhost:4200',
-                      'https://amfusion.netlify.com/'];
+                      'https://amfusion.netlify.com'];
 app.use(cors({
   origin: function(origin, callback){
     // allow requests with no origin 
