@@ -1,8 +1,13 @@
 var express = require('express'),
-    Router = express.Router();
+    router = express.Router(),
+    passport = require('passport'),
+    passportConf = require('../passport');;
 
-//routes for user
-Router.use("/", require("../controllers/authController"));
+// Require controller modules
+var authControler = require('../controllers/authController');
 
+router.post('/login', authControler.Login);
+router.post('/register', authControler.Register);
+router.post('/google', passport.authenticate('googleToken', {session: false}), authControler.GoogleOAuth)
 
-module.exports = Router;
+module.exports = router;

@@ -37,7 +37,7 @@ app.use(expressJwt({
         }
         return null;
     }
-}).unless({ path: ['/auth/register', '/auth/login'] }));
+}).unless({ path: ['/auth/register', '/auth/login', '/auth/google'] }));
 
 
 // parse application/x-www-form-urlencoded

@@ -3,23 +3,22 @@ var mongoose = require('mongoose'),
 
 // User Schema
 var user = mongoose.Schema({
+	loginType:{
+		type: String,
+		enum: ['local', 'google'],
+		required: true
+	},
 	username: {
 		type: String,
 		index: true
 	},
 	password: {
 		type: String,
-		require: true
+		required: function() { return this.loginType === 'local'; }
 	},
 	email: {
 		type: String,
 		require: true
-	},
-	name: {
-		type: String
-	},
-	token: {
-		type: String
 	},
 	createdAt: {
 		type: Date,

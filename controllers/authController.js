@@ -4,104 +4,123 @@ var express = require("express"),
     globalfunc = require('./globalController'),
     argon2 = require('argon2');
 
-router.post("/register", function (req, res) {
-    var obj = req.body;
-    obj.username = (obj.email).split('@')[0];
-    var query = {
-        email: obj.email
-    };
-    console.log("register > query : ", query);
-    findone(query).then(function (data) {
+module.exports = {
+    Register: function (req, res) {
+        var obj = req.body;
+        obj.username = (obj.email).split('@')[0];
+        obj.loginType = 'local'
+        var query = {
+            email: obj.email
+        };
+        console.log("register > query : ", query);
+        findone(query).then(function (data) {
 
-        if (data === null) {
-            saveUserInDB(obj);
-        } else {
-            res.send({
-                success: false,
-                message: 'User already exist'
-            })
-        }
-    }).catch((err) => {
-        res.send({
-            success: false,
-            message: 'Failed to query DB'
-        })
-        return;
-    })
-    function saveUserInDB(usr) {
-        var newUser = new userSchema(usr);
-        makeHash(usr.password).then(hash => {
-            newUser.password = hash;
-            newUser.save(function (err, user) {
-                if (err) {
-                    return res.status(400).send({
-                        success: false,
-                        message: err
-                    });
-                } else {
-                    return res.status(200).send({
-                        success: true,
-                        message: 'User created successfully'
-                    });
-                }
-            });
-        }).catch(err => {
-            return res.status(400).send({
-                success: false,
-                message: 'Internal server error',
-                error: err
-            });
-        })
-    }
-
-}).post('/login', function (req, res) {
-    let query = {
-        email: req.body.email
-    }
-    console.log("login > query : ", query);
-    findone(query, { 'username': 1, password: 1 }).then(function (respDB) {
-        var user = JSON.parse(JSON.stringify(respDB));
-        console.log("user found : ", user);
-        if (user === null) {
-            res.status(401).json({
-                success: false,
-                message: 'Authentication failed. User not found'
-            });
-            return;
-        }
-        if (user) {
-            matchPassword(user.password, req.body.password).then(isMatched => {
-                if (isMatched) {
-                    user.token = globalfunc.EncodeToken(user);
-                    delete user['password'];
-                    return res.status(200).json({
-                        status: true,
-                        user: user
-                    })
-                } else {
-                    return res.status(401).json({
-                        status: false,
-                        message: "Invalid credentials"
-                    })
-                }
-            }).catch((err) => {
+            if (data === null) {
+                saveUserInDB(obj);
+            } else {
                 res.send({
                     success: false,
-                    error: err,
-                    message: 'Internal server error'
+                    message: 'User already exist'
                 })
-                return;
+            }
+        }).catch((err) => {
+            res.send({
+                success: false,
+                message: 'Failed to query DB'
+            })
+            return;
+        })
+        function saveUserInDB(usr) {
+            var newUser = new userSchema(usr);
+            makeHash(usr.password).then(hash => {
+                newUser.password = hash;
+                newUser.save(function (err, user) {
+                    if (err) {
+                        return res.status(400).send({
+                            success: false,
+                            message: err
+                        });
+                    } else {
+                        return res.status(200).send({
+                            success: true,
+                            message: 'User created successfully'
+                        });
+                    }
+                });
+            }).catch(err => {
+                return res.status(400).send({
+                    success: false,
+                    message: 'Internal server error',
+                    error: err
+                });
             })
         }
-    }).catch((err) => {
-        res.send({
-            success: false,
-            error: err,
-            message: 'Failed to query DB'
+    },
+    Login: function (req, res) {
+        let query = {
+            email: req.body.email
+        }
+        console.log("login > query : ", query);
+        findone(query, { 'username': 1, password: 1 }).then(function (respDB) {
+            var user = JSON.parse(JSON.stringify(respDB));
+            console.log("user found : ", user);
+            if (user === null) {
+                res.status(401).json({
+                    success: false,
+                    message: 'Authentication failed. User not found'
+                });
+                return;
+            }
+            if (user) {
+                matchPassword(user.password, req.body.password).then(isMatched => {
+                    if (isMatched) {
+                        user.token = globalfunc.EncodeToken(user);
+                        delete user['password'];
+                        delete user['_id']
+                        return res.status(200).json({
+                            status: true,
+                            user: user
+                        })
+                    } else {
+                        return res.status(401).json({
+                            status: false,
+                            message: "Invalid credentials"
+                        })
+                    }
+                }).catch((err) => {
+                    res.send({
+                        success: false,
+                        error: err,
+                        message: 'Internal server error'
+                    })
+                    return;
+                })
+            }
+        }).catch((err) => {
+            res.send({
+                success: false,
+                error: err,
+                message: 'Failed to query DB'
+            })
+            return;
         })
-        return;
-    })
-})
+    },
+    GoogleOAuth: function (req, res) {
+        console.log(`GoogleOAuth > req : ${req}`)
+        let user = JSON.parse(JSON.stringify(req.user))
+        user.token = globalfunc.EncodeToken(user);
+        delete user['password'];
+        delete user['_id'];
+        delete user['loginType'];
+        delete user['email'];
+        delete user['createdAt'];
+        return res.status(200).json({
+            status: true,
+            user: user
+        })
+    }
+}
+
 
 function findone(query, opt = {}) {
     return new Promise(function (resolve, reject) {
@@ -136,4 +155,3 @@ function makeHash(password) {
     })
 
 }
-module.exports = router;
