@@ -9,11 +9,11 @@ var user = mongoose.Schema({
 	},
 	password: {
 		type: String,
-		require:true
+		require: true
 	},
 	email: {
 		type: String,
-		require:true
+		require: true
 	},
 	name: {
 		type: String
@@ -30,7 +30,7 @@ var user = mongoose.Schema({
 		'default': shortid.generate
 	},
 }, {
-    versionKey: false
+	versionKey: false
 })
 
 var User = module.exports = mongoose.model('user', user);

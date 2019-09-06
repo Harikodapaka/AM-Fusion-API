@@ -1,8 +1,7 @@
 var express = require("express"),
     router = express.Router(),
     userSchema = require("../models/user-model"),
-    config = require('../config.json'),
-    jwt = require('jsonwebtoken'),
+    globalfunc = require('./globalController'),
     argon2 = require('argon2');
 
 router.post("/register", function (req, res) {
@@ -60,7 +59,7 @@ router.post("/register", function (req, res) {
         email: req.body.email
     }
     console.log("login > query : ", query);
-    findone(query, {'username': 1, password: 1}).then(function (respDB) {
+    findone(query, { 'username': 1, password: 1 }).then(function (respDB) {
         var user = JSON.parse(JSON.stringify(respDB));
         console.log("user found : ", user);
         if (user === null) {
@@ -73,7 +72,7 @@ router.post("/register", function (req, res) {
         if (user) {
             matchPassword(user.password, req.body.password).then(isMatched => {
                 if (isMatched) {
-                    user.token = jwt.sign({ email: user.email, _id: user._id }, 'RESTFULAPIs');
+                    user.token = globalfunc.EncodeToken(user);
                     delete user['password'];
                     return res.status(200).json({
                         status: true,
@@ -106,7 +105,7 @@ router.post("/register", function (req, res) {
 
 function findone(query, opt = {}) {
     return new Promise(function (resolve, reject) {
-        userSchema.findOne(query,opt , function (err, data) {
+        userSchema.findOne(query, opt, function (err, data) {
             if (err) return reject(err)
             resolve(data)
         })

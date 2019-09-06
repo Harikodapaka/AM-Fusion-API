@@ -1,6 +1,6 @@
 {
     "connectionString": "mongodb://localhost:27017/admin",
-    "apiUrl":  "http://localhost:3000",
-    "port":3000,
-    "secret": "HelloWorld"
+    "apiUrl": "http://localhost:3000",
+    "port": 3000,
+    "secret": "beb99acc73aba846ae7258e8639f4bfcec65ed89f7644a99c3f289d5893f665c"
 }
