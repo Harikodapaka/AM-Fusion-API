@@ -12,8 +12,8 @@ passport.use('googleToken', new GooglePlusTokenStrategy({
         let query = { $or: [ { _id: profile.id }, { email: email } ] }
         console.log(`Google Sign in Query - ${JSON.stringify(query)}`);
         const existingUser = await UserSchema.findOne(query);
-        console.log(`User already exist ${existingUser._id}`);
         if (existingUser) {
+            console.log(`User already exist ${existingUser._id}`);
             return done(null, existingUser);
         }
         var obj = {
