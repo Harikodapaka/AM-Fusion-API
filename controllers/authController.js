@@ -7,12 +7,19 @@ var express = require("express"),
 module.exports = {
     Register: function (req, res) {
         var obj = req.body;
+        if(obj.password !== obj.confirm_password){
+            res.send({
+                success: false,
+                message: 'Passwords did not match!!'
+            })
+            return;
+        }
         obj.username = (obj.email).split('@')[0];
         obj.loginType = 'local'
         var query = {
             email: obj.email
         };
-        console.log("register > query : ", query);
+        console.log("register > query : ", JSON.stringify(query));
         findone(query).then(function (data) {
 
             if (data === null) {
@@ -57,10 +64,8 @@ module.exports = {
         }
     },
     Login: function (req, res) {
-        let query = {
-            email: req.body.email
-        }
-        console.log("login > query : ", query);
+        let query = { $and: [ { email: req.body.email }, { loginType: 'local' } ] }
+        console.log("login > query : ", JSON.stringify(query));
         findone(query, { 'username': 1, password: 1 }).then(function (respDB) {
             var user = JSON.parse(JSON.stringify(respDB));
             console.log("user found : ", user);
@@ -106,7 +111,7 @@ module.exports = {
         })
     },
     GoogleOAuth: function (req, res) {
-        console.log(`GoogleOAuth > req : ${req}`)
+        console.log(`GoogleOAuth > req : ${JSON.stringify(req)}`)
         let user = JSON.parse(JSON.stringify(req.user))
         user.token = globalfunc.EncodeToken(user);
         delete user['password'];

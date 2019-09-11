@@ -2,10 +2,12 @@ const passport = require('passport'),
     GooglePlusTokenStrategy = require('passport-google-plus-token'),
     UserSchema = require('./models/user-model');
 
+var config = require('./config.json');
+
 // Google OAuth Strategy
 passport.use('googleToken', new GooglePlusTokenStrategy({
-    clientID: '2387600941-5u5j008fesmdksobv31dobtv0cs1pv9e.apps.googleusercontent.com',
-    clientSecret: 'G7Zhw63sGml15zx7dsT6D4XQ'
+    clientID: config.google_clientID,
+    clientSecret: config.google_clientSecret
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         let email = profile.emails[0].value
