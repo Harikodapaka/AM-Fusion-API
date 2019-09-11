@@ -8,7 +8,7 @@ module.exports = {
     Register: function (req, res) {
         var obj = req.body;
         if(obj.password !== obj.confirm_password){
-            res.send({
+            res.status(409).send({
                 success: false,
                 message: 'Passwords did not match!!'
             })
@@ -25,13 +25,13 @@ module.exports = {
             if (data === null) {
                 saveUserInDB(obj);
             } else {
-                res.send({
+                res.status(409).send({
                     success: false,
                     message: 'User already exist'
                 })
             }
         }).catch((err) => {
-            res.send({
+            res.status(502).send({
                 success: false,
                 message: 'Failed to query DB'
             })
@@ -43,7 +43,7 @@ module.exports = {
                 newUser.password = hash;
                 newUser.save(function (err, user) {
                     if (err) {
-                        return res.status(400).send({
+                        return res.status(502).send({
                             success: false,
                             message: err
                         });
@@ -55,7 +55,7 @@ module.exports = {
                     }
                 });
             }).catch(err => {
-                return res.status(400).send({
+                return res.status(500).send({
                     success: false,
                     message: 'Internal server error',
                     error: err
@@ -93,7 +93,7 @@ module.exports = {
                         })
                     }
                 }).catch((err) => {
-                    res.send({
+                    res.status(500).send({
                         success: false,
                         error: err,
                         message: 'Internal server error'
@@ -102,7 +102,7 @@ module.exports = {
                 })
             }
         }).catch((err) => {
-            res.send({
+            res.status(502).send({
                 success: false,
                 error: err,
                 message: 'Failed to query DB'
