@@ -111,8 +111,8 @@ module.exports = {
         })
     },
     GoogleOAuth: function (req, res) {
-        console.log(`GoogleOAuth > req : ${JSON.stringify(req)}`)
-        let user = JSON.parse(JSON.stringify(req.user))
+        console.log('GoogleOAuth > req.user :', JSON.stringify(req.user));
+        var user = JSON.parse(JSON.stringify(req.user));
         user.token = globalfunc.EncodeToken(user);
         delete user['password'];
         delete user['_id'];
