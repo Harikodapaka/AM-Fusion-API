@@ -1,13 +1,12 @@
-var express = require("express"),
-    router = express.Router(),
-    userSchema = require("../models/user-model"),
+var express = require('express'),
+    userSchema = require('../models/user-model'),
     globalfunc = require('./globalController'),
     argon2 = require('argon2');
 
 module.exports = {
     Register: function (req, res) {
         var obj = req.body;
-        if(obj.password !== obj.confirm_password){
+        if (obj.password !== obj.confirm_password) {
             res.status(409).send({
                 success: false,
                 message: 'Passwords did not match!!'
@@ -19,7 +18,7 @@ module.exports = {
         var query = {
             email: obj.email
         };
-        console.log("register > query : ", JSON.stringify(query));
+        console.log('register > query : ', JSON.stringify(query));
         findone(query).then(function (data) {
 
             if (data === null) {
@@ -39,7 +38,7 @@ module.exports = {
         })
         function saveUserInDB(usr) {
             var newUser = new userSchema(usr);
-            makeHash(usr.password).then(hash => {
+            globalfunc.makeHash(usr.password).then(hash => {
                 newUser.password = hash;
                 newUser.save(function (err, user) {
                     if (err) {
@@ -64,11 +63,11 @@ module.exports = {
         }
     },
     Login: function (req, res) {
-        let query = { $and: [ { email: req.body.email }, { loginType: 'local' } ] }
-        console.log("login > query : ", JSON.stringify(query));
+        let query = { $and: [{ email: req.body.email }, { loginType: 'local' }] }
+        console.log('login > query : ', JSON.stringify(query));
         findone(query, { 'username': 1, password: 1 }).then(function (respDB) {
             var user = JSON.parse(JSON.stringify(respDB));
-            console.log("user found : ", user);
+            console.log('user found : ', user);
             if (user === null) {
                 res.status(401).json({
                     success: false,
@@ -77,7 +76,7 @@ module.exports = {
                 return;
             }
             if (user) {
-                matchPassword(user.password, req.body.password).then(isMatched => {
+                globalfunc.matchPassword(user.password, req.body.password).then(isMatched => {
                     if (isMatched) {
                         user.token = globalfunc.EncodeToken(user);
                         delete user['password'];
@@ -89,7 +88,7 @@ module.exports = {
                     } else {
                         return res.status(401).json({
                             status: false,
-                            message: "Invalid credentials"
+                            message: 'Invalid credentials'
                         })
                     }
                 }).catch((err) => {
@@ -134,29 +133,4 @@ function findone(query, opt = {}) {
             resolve(data)
         })
     })
-}
-function matchPassword(hash, password) {
-    return new Promise(function (resolve, reject) {
-        argon2.verify(hash, password).then(match => {
-            if (match) {
-                resolve(match);
-            } else {
-                resolve(match);
-            }
-        }).catch(err => {
-            reject(err)
-        });
-    })
-}
-function makeHash(password) {
-    return new Promise(function (resolve, reject) {
-        argon2.hash(password, {
-            type: argon2.argon2d
-        }).then(hash => {
-            resolve(hash);
-        }).catch(err => {
-            return reject(err);
-        })
-    })
-
 }
